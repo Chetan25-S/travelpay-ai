@@ -1,0 +1,10 @@
+const card=document.getElementById("paymentCard"),p=JSON.parse(sessionStorage.getItem("pendingPayment")||"null");
+if(!p){card.innerHTML="<h2>No pending payment</h2><a class='btn' href='scan.html'>Scan Payment</a>";}
+else{const pc=p.price_check;card.innerHTML=`<p class="eyebrow">PAYMENT REVIEW</p><h1>₹${Number(p.amount_inr).toLocaleString("en-IN")}</h1><p class="big-muted">≈ ${p.amount_foreign} ${escapeHtml(p.currency)}</p>
+<div class="row"><span>Merchant</span><b>${escapeHtml(p.merchant)}</b></div><div class="row"><span>UPI ID</span><b>${escapeHtml(p.upi_id||"Not provided")}</b></div>
+<div class="row"><span>Category</span><b>${escapeHtml(p.category)}</b></div><div class="row"><span>AI Risk</span><b class="risk-${String(p.risk_level).toLowerCase()}">${escapeHtml(p.risk_level)}</b></div>
+${pc&&pc.found?`<div class="price-mini">${pc.emoji} ${escapeHtml(pc.assessment)} · observed median ₹${Number(pc.average_price).toLocaleString("en-IN")}</div>`:pc?`<div class="price-mini">⚠️ ${escapeHtml(pc.message)}</div>`:""}<div class="insight">${escapeHtml(p.recommendation)}</div>
+<button id="confirm" class="btn full">Confirm Simulated Payment</button><a class="btn secondary full" href="scan.html">Cancel</a>`;
+confirm.onclick=async()=>{confirm.disabled=true;confirm.textContent="Processing...";
+ try{const d=await api("/transactions",{method:"POST",body:JSON.stringify({user_id:Number(getUserId()),merchant:p.merchant,upi_id:p.upi_id,amount_inr:p.amount_inr,amount_foreign:p.amount_foreign,currency:p.currency,category:p.category,risk_level:p.risk_level,recommendation:p.recommendation})});sessionStorage.removeItem("pendingPayment");card.innerHTML=`<h1>✓ Simulated Payment Successful</h1><p>Transaction ${d.reference_code} recorded in MySQL.</p><a class="btn" href="dashboard.html">Dashboard</a>`;}
+ catch(e){confirm.disabled=false;confirm.textContent="Confirm Simulated Payment";alert(e.message);}};}
